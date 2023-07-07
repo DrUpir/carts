@@ -1,4 +1,9 @@
+from typing import Final, Optional
+
 from django.db import models
+
+_GOOD: Final = 'Good'
+_BAD: Final = 'Bad'
 
 
 class current_seal_state_for_front(models.Model):
@@ -92,3 +97,80 @@ class CartReplacement(models.Model):
             self.new_no,
             self.created,
         )
+
+
+class CartReplacementReason(models.Model):
+    """Possible reason for agglomerate cart replacement."""
+
+    prev_no = models.IntegerField(
+        help_text='The number of the replaced (previous) cart. Duplicates CartReplacement model `prev_no`.',
+    )
+    new_no = models.IntegerField(
+        help_text='The number of the replacing (new) cart. Duplicates CartReplacement model `new_no`.',
+    )    
+    replacement = models.OneToOneField(
+        CartReplacement,
+        on_delete=models.CASCADE,
+        null=False,
+        related_name='cart_replacement_reason',
+        help_text='Cart replacement record.',
+    )
+
+    bad_seal_cam1_left = models.ForeignKey(
+        current_seal_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam1_left_cart_replacement_reasons',
+        help_text='Bad seal state record by left cam1 observation. Null if left cam1 state is good.',
+    )
+    bad_seal_cam1_right = models.ForeignKey(
+        current_seal_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam1_right_cart_replacement_reasons',
+        help_text='Bad seal state record by right cam1 observation. Null if right cam1 state is good.',
+    )
+    bad_seal_cam2_left = models.ForeignKey(
+        current_seal_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam2_left_cart_replacement_reasons',
+        help_text='Bad seal state record by left cam2 observation. Null if left cam2 state is good.',
+    )
+    bad_seal_cam2_right = models.ForeignKey(
+        current_seal_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam2_right_cart_replacement_reasons',
+        help_text='Bad seal state record by right cam2 observation. Null if right cam2 state is good.',
+    )
+
+    bad_bolt_cam1 = models.ForeignKey(
+        current_bolts_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam1_cart_replacement_reasons',
+        help_text='Bad bolt state record by cam1 observation. Null if cam1 state is good.',
+    )
+    bad_bolt_cam2 = models.ForeignKey(
+        current_bolts_state_for_front,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='cam2_cart_replacement_reasons',
+        help_text='Bad bolt state record by cam2 observation. Null if cam2 state is good.',
+    )
+
+    def _cam_state(cam_name: str, state_id: Optional[int]) -> str:
+        state = _GOOD if state_id is None else _BAD
+        return ', {0}: {1}'.format(cam_name, state)
+
+    def __str__(self) -> str:
+        """All django models should have this method."""
+        reason = 'id: {0}, prev no: {1}, new no: {2}'.format(self.id, self.prev_no, self.new_no)
+        reason += self._cam_state('seal_cam1_left', self.bad_seal_cam1_left_id)
+        reason += self._cam_state('seal_cam1_right', self.bad_seal_cam1_right_id)
+        reason += self._cam_state('seal_cam2_left', self.bad_seal_cam2_left_id)
+        reason += self._cam_state('seal_cam2_right', self.bad_seal_cam2_right_id)
+        reason += self._cam_state('bolt_cam1', self.bad_bolt_cam1_id)
+        reason += self._cam_state('bolt_cam2', self.bad_bolt_cam2_id)
+        return reason
