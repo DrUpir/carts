@@ -61,3 +61,34 @@ class current_bolts_state_for_front(models.Model):
     class Meta:
         managed = False
         db_table = "app_current_bolts_state_for_front"
+
+
+class CartReplacement(models.Model):
+    """Agglomerate cart replacement record."""
+
+    prev_no = models.IntegerField(
+        db_column='no',
+        help_text='The number of the replaced (previous) cart.',
+    )
+    prev_cart_detected = models.DateTimeField(
+        db_column='time',
+        help_text='Time when replaced (previous) cart was last detected.',
+    )
+    new_no = models.IntegerField(
+        db_column='replace_no',
+        help_text='The number of the replacing (new) cart.',
+    )
+    created = models.DateTimeField(help_text='Record creation time.')
+
+    class Meta:
+        managed = False
+        db_table = 'app_replacedcarts'
+
+    def __str__(self) -> str:
+        """All django models should have this method."""
+        return 'id: {0}, prev no: {1}, new no: {2}, created: {3}'.format(
+            self.id, 
+            self.prev_no, 
+            self.new_no,
+            self.created,
+        )
