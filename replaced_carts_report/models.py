@@ -160,17 +160,18 @@ class CartReplacementReason(models.Model):
         help_text='Bad bolt state record by cam2 observation. Null if cam2 state is good.',
     )
 
-    def _inline_cam_state(cam_name: str, state_id: Optional[int]) -> str:
-        state = _GOOD if state_id is None else _BAD
-        return ', {0}: {1}'.format(cam_name, state)
-
     def __str__(self) -> str:
         """All django models should have this method."""
-        reason = 'id: {0}, prev no: {1}, new no: {2}'.format(self.id, self.prev_no, self.new_no)
-        reason += self._inline_cam_state('seal_cam1_left', self.bad_seal_cam1_left_id)
-        reason += self._inline_cam_state('seal_cam1_right', self.bad_seal_cam1_right_id)
-        reason += self._inline_cam_state('seal_cam2_left', self.bad_seal_cam2_left_id)
-        reason += self._inline_cam_state('seal_cam2_right', self.bad_seal_cam2_right_id)
-        reason += self._inline_cam_state('bolt_cam1', self.bad_bolt_cam1_id)
-        reason += self._inline_cam_state('bolt_cam2', self.bad_bolt_cam2_id)
-        return reason
+        return 'id: {0}, prev no: {1}, new no: {2}, has replacement reason: {3}'.format(
+            self.id, 
+            self.prev_no, 
+            self.new_no,
+            any(bad_state_id is not None for bad_state_id in (
+                self.bad_seal_cam1_left_id,
+                self.bad_seal_cam1_right_id,
+                self.bad_seal_cam2_left_id,
+                self.bad_seal_cam2_right_id,
+                self.bad_bolt_cam1_id,
+                self.bad_bolt_cam2_id,
+            )),
+        )
